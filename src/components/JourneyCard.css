@@ -1,0 +1,123 @@
+.journey-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.journey-card__badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2);
+}
+
+.journey-card h3 {
+  margin-bottom: var(--space-3);
+}
+
+.journey-card__images {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.journey-card__image {
+  flex: 1;
+  min-width: 0;
+}
+
+.journey-card__image img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.journey-card__image figcaption {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+  text-align: center;
+}
+
+.journey-card__arrow {
+  color: var(--navy);
+  font-size: var(--text-h3);
+  flex-shrink: 0;
+}
+
+.journey-card__milestone {
+  margin-bottom: var(--space-3);
+}
+
+.journey-card__milestone-label {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+}
+
+.journey-card__milestone-text {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+}
+
+.journey-card__milestone-text--outcome {
+  color: var(--navy);
+  font-weight: 600;
+  font-size: var(--text-body);
+}
+
+.journey-card__prices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-3);
+}
+
+.journey-card__prices-property {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  font-size: var(--text-small);
+  margin-bottom: var(--space-1);
+}
+
+.journey-card__price-label {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+}
+
+.journey-card__price-value {
+  font-weight: 600;
+  font-size: var(--text-h3);
+  margin-top: 0.25rem;
+}
+
+.journey-card__strategy {
+  font-size: var(--text-small);
+  color: var(--charcoal);
+  font-style: italic;
+  border-left: 2px solid var(--navy);
+  padding-left: var(--space-2);
+}
+
+@media (max-width: 480px) {
+  .journey-card__images {
+    flex-direction: column;
+  }
+
+  .journey-card__arrow {
+    transform: rotate(90deg);
+  }
+}

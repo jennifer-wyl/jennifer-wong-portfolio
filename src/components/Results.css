@@ -1,0 +1,23 @@
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  text-align: center;
+}
+
+.result-stat__value {
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.result-stat__label {
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+@media (min-width: 768px) {
+  .results-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

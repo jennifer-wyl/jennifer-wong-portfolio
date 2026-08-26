@@ -1,0 +1,51 @@
+.about {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+.about__photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: 6px;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.about__bio {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--text-muted);
+}
+
+.about__points {
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.about__points li {
+  padding-left: var(--space-3);
+  position: relative;
+  font-size: var(--text-small);
+}
+
+.about__points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--navy);
+}
+
+@media (min-width: 768px) {
+  .about {
+    grid-template-columns: 300px 1fr;
+  }
+}

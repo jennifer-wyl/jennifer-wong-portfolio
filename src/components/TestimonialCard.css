@@ -1,0 +1,18 @@
+.testimonial-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: var(--space-4);
+}
+
+.testimonial-card blockquote {
+  font-size: var(--text-body);
+  color: var(--charcoal);
+}
+
+.testimonial-card figcaption {
+  margin-top: var(--space-3);
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  font-weight: 600;
+}
