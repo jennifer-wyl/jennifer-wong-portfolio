@@ -6,7 +6,7 @@ type Launch = {
   location: string;
   description: string;
   previewLaunch: string;
-  officialLaunch: string;
+  officialLaunch?: string;
   url: string;
   cta: string;
 };
@@ -21,6 +21,16 @@ const launches: Launch[] = [
     previewLaunch: "Sept 18, 2026",
     officialLaunch: "Oct 3, 2026",
     url: "https://lucerne-grand-launch.vercel.app/",
+    cta: "Register for Preview",
+  },
+  {
+    title: "Thomson Reserve",
+    status: "Coming Soon - Oct 3, 2026",
+    location: "D20, Upper Thomson · Bright Hill Drive",
+    description:
+      "2 minutes to Upper Thomson MRT. 1,268 units, 2–5 bedrooms (99-year tenure). Bordered by nature reserves.",
+    previewLaunch: "Oct 3, 2026",
+    url: "https://thomson-reserve-launch.vercel.app/",
     cta: "Register for Preview",
   },
 ];
@@ -45,10 +55,12 @@ export default function FeaturedLaunches() {
                   <dt>Preview Launch</dt>
                   <dd>{launch.previewLaunch}</dd>
                 </div>
-                <div>
-                  <dt>Official Launch</dt>
-                  <dd>{launch.officialLaunch}</dd>
-                </div>
+                {launch.officialLaunch && (
+                  <div>
+                    <dt>Official Launch</dt>
+                    <dd>{launch.officialLaunch}</dd>
+                  </div>
+                )}
               </dl>
               <a
                 className="btn btn--primary"
