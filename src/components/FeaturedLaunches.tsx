@@ -3,8 +3,10 @@ import "./FeaturedLaunches.css";
 type Launch = {
   title: string;
   status: string;
-  previewLaunch: string;
+  location: string;
   description: string;
+  previewLaunch: string;
+  officialLaunch: string;
   url: string;
   cta: string;
 };
@@ -13,11 +15,13 @@ const launches: Launch[] = [
   {
     title: "Lucerne Grand",
     status: "Coming Soon - Sept 18, 2026",
-    previewLaunch: "Oct 3, 2026",
+    location: "D22, Jurong · Lakeside Drive",
     description:
-      "[Add brief description of project - location, target, etc.]",
+      "200m from Lakeside MRT. 570 units, 2–4 bedrooms (99-year tenure). Completion 2031. A lifetime by the water.",
+    previewLaunch: "Sept 18, 2026",
+    officialLaunch: "Oct 3, 2026",
     url: "https://lucerne-grand-launch.vercel.app/",
-    cta: "Early Interest",
+    cta: "Register for Preview",
   },
 ];
 
@@ -34,13 +38,18 @@ export default function FeaturedLaunches() {
             <article className="launch-card" key={launch.title}>
               <span className="launch-card__badge">{launch.status}</span>
               <h3 className="launch-card__title">{launch.title}</h3>
+              <p className="launch-card__location">{launch.location}</p>
+              <p className="launch-card__description">{launch.description}</p>
               <dl className="launch-card__meta">
                 <div>
                   <dt>Preview Launch</dt>
                   <dd>{launch.previewLaunch}</dd>
                 </div>
+                <div>
+                  <dt>Official Launch</dt>
+                  <dd>{launch.officialLaunch}</dd>
+                </div>
               </dl>
-              <p className="launch-card__description">{launch.description}</p>
               <a
                 className="btn btn--primary"
                 href={launch.url}
