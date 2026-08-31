@@ -1,0 +1,59 @@
+.launches-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.launch-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--navy);
+  border-radius: 6px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.launch-card__badge {
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+  margin-bottom: var(--space-2);
+}
+
+.launch-card__title {
+  margin-bottom: var(--space-3);
+}
+
+.launch-card__meta {
+  display: flex;
+  gap: var(--space-4);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-3);
+  width: 100%;
+}
+
+.launch-card__meta dt {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.launch-card__meta dd {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.launch-card__description {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  margin-bottom: var(--space-4);
+}

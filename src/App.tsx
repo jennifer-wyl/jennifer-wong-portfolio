@@ -3,6 +3,7 @@ import FeaturedProperties from "./components/FeaturedProperties";
 import About from "./components/About";
 import Results from "./components/Results";
 import Testimonials from "./components/Testimonials";
+import FeaturedLaunches from "./components/FeaturedLaunches";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 
@@ -14,6 +15,7 @@ export default function App() {
       <About />
       <Results />
       <Testimonials />
+      <FeaturedLaunches />
       <Contact />
       <Footer />
     </>

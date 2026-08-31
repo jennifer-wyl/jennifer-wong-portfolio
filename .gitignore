@@ -5,3 +5,11 @@ dist
 
 .vercel
 *.tsbuildinfo
+
+.env*
+
+# graphify
+graphify-out/
+
+# windows
+desktop.ini
