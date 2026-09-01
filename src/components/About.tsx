@@ -20,10 +20,10 @@ export default function About() {
           <p className="section__eyebrow">About Jennifer</p>
           <h2>A Different Kind of Property Advisor</h2>
           <p className="about__bio">
-            Jen spent 16 years as an M&amp;E Manager at Evergreen Engineering
-            before transitioning to property in 2025. Engineering background
-            = data-driven decisions. No high-pressure sales. Just strategic
-            advice for HDB upgraders.
+            Jen spent 16 years as an M&amp;E Manager at a leading Singapore
+            contractor before transitioning to property in 2025. Engineering
+            background = data-driven decisions. No high-pressure sales. Just
+            strategic advice for HDB upgraders.
           </p>
           <ul className="about__points">
             {points.map((point) => (
