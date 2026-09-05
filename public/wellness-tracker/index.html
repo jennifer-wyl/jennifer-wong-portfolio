@@ -1,0 +1,2164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sanctuary — Wellness Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+:root {
+  --bg: #0d0f14;
+  --s1: #13161f;
+  --s2: #1a1e2a;
+  --s3: #222736;
+  --border: #252b3a;
+  --border2: #2e364a;
+  --accent: #7ec8a0;
+  --accent-d: rgba(126,200,160,0.1);
+  --accent-g: rgba(126,200,160,0.22);
+  --warn: #e8a87c;
+  --warn-d: rgba(232,168,124,0.1);
+  --danger: #e07878;
+  --danger-d: rgba(224,120,120,0.1);
+  --gold: #c9a96e;
+  --text: #dde3ee;
+  --muted: #6b7590;
+  --dim: #3d4560;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ── TOP BAR ── */
+.topbar {
+  padding: 52px 22px 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.topbar-left {}
+.topbar-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  color: var(--text);
+  line-height: 1.1;
+}
+.topbar-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  letter-spacing: 0.2px;
+}
+.streak-badge {
+  background: var(--accent-d);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* ── BODY ── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 16px 110px;
+}
+.body::-webkit-scrollbar { display: none; }
+
+/* ── LABEL ── */
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 22px 0 10px 2px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* ── MOOD GRID ── */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.mood-btn {
+  background: var(--s2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 4px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.mood-btn .emoji { font-size: 22px; line-height: 1; }
+.mood-btn .lbl { font-size: 10px; color: var(--muted); }
+.mood-btn.sel {
+  border-color: var(--accent);
+  background: var(--accent-d);
+}
+.mood-btn.sel .lbl { color: var(--accent); }
+
+/* ── SLIDER ── */
+.slider-wrap { margin-bottom: 16px; }
+.slider-wrap:last-child { margin-bottom: 0; }
+.slider-row-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.slider-name { font-size: 13px; color: var(--muted); }
+.slider-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 32px;
+  text-align: right;
+}
+input[type=range] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px var(--accent-d);
+}
+
+/* ── CHIPS ── */
+.chip-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  background: var(--s2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.chip.on {
+  border-color: var(--warn);
+  background: var(--warn-d);
+  color: var(--warn);
+}
+
+/* ── HABIT LIST ── */
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.habit-row:last-child { border-bottom: none; padding-bottom: 0; }
+.habit-row:first-child { padding-top: 0; }
+.hcheck {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 12px;
+  color: transparent;
+}
+.hcheck.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.htext { flex: 1; min-width: 0; }
+.hname { font-size: 14px; color: var(--text); font-weight: 500; }
+.hsub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+.htime {
+  font-size: 11px;
+  color: var(--dim);
+  background: var(--s2);
+  padding: 3px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.htime.done-lbl { color: var(--accent); background: var(--accent-d); }
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.88; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.ghost {
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+/* ── BOTTOM NAV ── */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: rgba(13,15,20,0.96);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 10px 0 26px;
+  overflow-x: auto;
+  z-index: 100;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.nav-icon { font-size: 20px; opacity: 0.35; transition: opacity 0.15s; }
+.nav-lbl { font-size: 10px; color: var(--dim); letter-spacing: 0.4px; transition: color 0.15s; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-item.active .nav-lbl { color: var(--accent); }
+
+/* ── STATS GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 14px;
+}
+.stat-val {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-unit { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.stat-trend { font-size: 11px; margin-top: 8px; }
+.up { color: var(--accent); }
+.dn { color: var(--danger); }
+.neu { color: var(--muted); }
+
+/* ── INSIGHT CARD ── */
+.insight {
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.insight.green {
+  background: linear-gradient(135deg, rgba(126,200,160,0.08), rgba(126,200,160,0.02));
+  border: 1px solid rgba(126,200,160,0.25);
+}
+.insight.amber {
+  background: linear-gradient(135deg, rgba(232,168,124,0.08), rgba(232,168,124,0.02));
+  border: 1px solid rgba(232,168,124,0.25);
+}
+.insight-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.insight.green .insight-tag { color: var(--accent); }
+.insight.amber .insight-tag { color: var(--warn); }
+.insight-body { font-size: 13px; color: var(--text); line-height: 1.6; }
+.insight-body strong { color: var(--accent); }
+.insight.amber .insight-body strong { color: var(--warn); }
+
+/* ── STREAK DOTS ── */
+.streak-row { display: flex; gap: 5px; margin-top: 10px; }
+.sdot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dim);
+}
+.sdot.done { background: var(--accent-d); border-color: var(--accent); color: var(--accent); }
+.sdot.today { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+/* ── BAR CHART ── */
+.bar-list { display: flex; flex-direction: column; gap: 12px; }
+.bar-item {}
+.bar-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.bar-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+.bar-fill.warn { background: var(--warn); }
+.bar-fill.danger { background: var(--danger); }
+
+/* ── LOG HISTORY ── */
+.log-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.log-item:last-child { border-bottom: none; }
+.log-date { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.log-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.log-pill {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.log-pill.accent { background: var(--accent-d); color: var(--accent); border-color: var(--accent); }
+.log-symptoms { font-size: 12px; color: var(--dim); }
+
+/* ── REMINDER TOGGLE ── */
+.rem-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rem-item:last-child { border-bottom: none; }
+.rem-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--s2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.rem-body { flex: 1; min-width: 0; }
+.rem-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.rem-time { font-size: 11px; color: var(--dim); margin-top: 2px; }
+.tog {
+  width: 44px;
+  height: 25px;
+  border-radius: 13px;
+  background: var(--accent);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.tog.off { background: var(--border2); }
+.tog::after {
+  content: '';
+  position: absolute;
+  width: 19px; height: 19px;
+  background: white;
+  border-radius: 50%;
+  top: 3px; right: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.tog.off::after { transform: translateX(-19px); }
+
+/* ── CONTENT CARDS ── */
+.content-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.ctag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.chook {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--accent);
+  line-height: 1.45;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+.cbody { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.copy-btn {
+  margin-top: 12px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 88px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--s2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── LOADING ── */
+.dot { display: inline-block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 0 2px; animation: blink 1.1s infinite; }
+.dot:nth-child(2) { animation-delay: 0.18s; }
+.dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes blink { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.1)} }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+/* ── SOMATIC ROUTINE CARDS ── */
+.routine-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.routine-card:hover { border-color: var(--accent); }
+.routine-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.routine-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--s2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.routine-info { flex: 1; min-width: 0; }
+.routine-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.routine-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.routine-arrow { font-size: 18px; color: var(--dim); }
+.routine-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+  line-height: 1.5;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── ROUTINE PLAYER OVERLAY ── */
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  max-width: 430px;
+  margin: 0 auto;
+}
+.player-overlay.active { display: flex; }
+.player-top {
+  padding: 24px 20px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.player-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--s2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--muted);
+  cursor: pointer;
+}
+.player-title { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+.player-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.timer-ring-wrap { position: relative; width: 220px; height: 220px; }
+.timer-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+.timer-ring-fg { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.timer-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.timer-phase {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.timer-count { font-size: 13px; color: var(--accent); font-weight: 600; }
+.player-instruction {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 280px;
+}
+.player-controls {
+  padding: 20px;
+  display: flex;
+  gap: 10px;
+}
+.player-step-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 20px;
+}
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); }
+.step-dot.active { background: var(--accent); width: 18px; border-radius: 3px; transition: all 0.3s; }
+
+/* ── note textarea ── */
+textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 12px;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SCREEN: CHECK IN ══════════ -->
+<div class="screen active" id="s-checkin">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="greeting">Good morning, Jen 🌿</div>
+      <div class="topbar-sub" id="today-date">Loading...</div>
+      <div class="topbar-sub" id="sync-status" style="opacity:0.75;margin-top:2px;">Connecting…</div>
+    </div>
+    <div class="streak-badge" id="streak-badge">Day 1 🌱</div>
+  </div>
+  <div class="body">
+
+    <div class="label">How do you feel right now?</div>
+    <div class="card">
+      <div class="mood-grid" id="mood-grid">
+        <div class="mood-btn" data-mood="Calm" onclick="pickMood(this)"><div class="emoji">😌</div><div class="lbl">Calm</div></div>
+        <div class="mood-btn" data-mood="Anxious" onclick="pickMood(this)"><div class="emoji">😰</div><div class="lbl">Anxious</div></div>
+        <div class="mood-btn" data-mood="Foggy" onclick="pickMood(this)"><div class="emoji">🌫️</div><div class="lbl">Foggy</div></div>
+        <div class="mood-btn" data-mood="Low" onclick="pickMood(this)"><div class="emoji">😔</div><div class="lbl">Low</div></div>
+        <div class="mood-btn" data-mood="Good" onclick="pickMood(this)"><div class="emoji">🙂</div><div class="lbl">Good</div></div>
+      </div>
+    </div>
+
+    <div class="label">Energy & clarity</div>
+    <div class="card">
+      <div class="slider-wrap">
+        <div class="slider-row-label">
+          <span class="slider-name">Energy level</span>
+          <span class="slider-val" id="ev">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="energy-slider" oninput="document.getElementById('ev').textContent=this.value">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-row-label">
+          <span class="slider-name">Mental clarity</span>
+          <span class="slider-val" id="cv">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="clarity-slider" oninput="document.getElementById('cv').textContent=this.value">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-row-label">
+          <span class="slider-name">Sleep quality last night</span>
+          <span class="slider-val" id="sv">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="sleep-slider" oninput="document.getElementById('sv').textContent=this.value">
+      </div>
+    </div>
+
+    <div class="label">Any symptoms today?</div>
+    <div class="card">
+      <div class="chip-wrap" id="symptom-chips">
+        <div class="chip" onclick="toggleChip(this)">🧠 Brain fog</div>
+        <div class="chip" onclick="toggleChip(this)">😴 Fatigue</div>
+        <div class="chip" onclick="toggleChip(this)">😤 Irritable</div>
+        <div class="chip" onclick="toggleChip(this)">😰 Anxious</div>
+        <div class="chip" onclick="toggleChip(this)">💧 Bloated</div>
+        <div class="chip" onclick="toggleChip(this)">🌙 Poor sleep</div>
+        <div class="chip" onclick="toggleChip(this)">🔥 Hot flashes</div>
+        <div class="chip" onclick="toggleChip(this)">🫀 Heart racing</div>
+        <div class="chip" onclick="toggleChip(this)">⚖️ Weight up</div>
+        <div class="chip" onclick="toggleChip(this)">✨ Feeling good</div>
+        <div class="chip" onclick="toggleChip(this)">💪 Strong</div>
+      </div>
+    </div>
+
+    <div class="label">Today's nervous system reset</div>
+    <div class="card" id="habit-card">
+      <div class="habit-row" data-habit="sunlight" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">☀️ Morning sunlight</div><div class="hsub">10 min within 30 min of waking</div></div>
+        <div class="htime">6–7AM</div>
+      </div>
+      <div class="habit-row" data-habit="nophone" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">📵 No phone 30 min</div><div class="hsub">Stop hypervigilance trigger</div></div>
+        <div class="htime">AM</div>
+      </div>
+      <div class="habit-row" data-habit="breathing" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">🫁 4-6-8 breathing</div><div class="hsub">4 in · 6 hold · 8 out — 5 cycles</div></div>
+        <div class="htime">AM</div>
+      </div>
+      <div class="habit-row" data-habit="protein" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">🥚 Protein breakfast</div><div class="hsub">30g+ — stops cortisol crash</div></div>
+        <div class="htime">8AM</div>
+      </div>
+      <div class="habit-row" data-habit="magnesium" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">💊 Bioglan 2 tablets</div><div class="hsub">Magnesium + Ashwagandha</div></div>
+        <div class="htime">7PM</div>
+      </div>
+      <div class="habit-row" data-habit="screens" onclick="toggleHabit(this)">
+        <div class="hcheck">✓</div>
+        <div class="htext"><div class="hname">📺 Screens off</div><div class="hsub">Protects melatonin production</div></div>
+        <div class="htime">9:30PM</div>
+      </div>
+    </div>
+
+    <div class="label">Notes (optional)</div>
+    <textarea id="notes-input" rows="3" placeholder="How are you feeling? Any triggers today?"></textarea>
+
+    <div style="height:12px"></div>
+    <button class="btn" onclick="saveCheckin()">Save today's check-in</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: PATTERNS ══════════ -->
+<div class="screen" id="s-patterns">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Your Patterns</div>
+      <div class="topbar-sub" id="pattern-sub">Based on all check-ins</div>
+    </div>
+  </div>
+  <div class="body" id="patterns-body">
+    <div class="empty">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">No data yet</div>
+      <div class="empty-sub">Complete your first check-in to start seeing patterns.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: HISTORY ══════════ -->
+<div class="screen" id="s-history">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Log History</div>
+      <div class="topbar-sub" id="history-sub">All check-ins</div>
+    </div>
+    <button class="btn ghost" style="width:auto;padding:7px 14px;font-size:12px;margin-top:2px" onclick="confirmClear()">Clear all</button>
+  </div>
+  <div class="body" id="history-body">
+    <div class="empty">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No check-ins yet</div>
+      <div class="empty-sub">Your daily logs will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: CONTENT ══════════ -->
+<div class="screen" id="s-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">@ikigaisantuary</div>
+      <div class="topbar-sub">Content from your healing journey</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="insight green" id="content-insight">
+      <div class="insight-tag">✨ Your data → your content</div>
+      <div class="insight-body" id="content-insight-body">Log a check-in first. Your patterns will generate personalised content ideas.</div>
+    </div>
+
+    <div class="label">Content library</div>
+
+    <div class="content-card">
+      <div class="ctag">🎬 Reel · Personal Journey</div>
+      <div class="chook">"It was a nervous system stuck in survival mode."</div>
+      <div class="cbody">17 years in M&E. Stable salary. Senior role. And still — brain fog, weight gain, fatigue, anxiety. The paycheck couldn't fix what chronic stress had done. Here's what's actually happening in your body. ↓</div>
+      <button class="copy-btn" onclick="copyText(this,'It was a nervous system stuck in survival mode.\n\n17 years in M&E. Stable salary. Senior role. And still — brain fog, weight gain, fatigue, anxiety. The paycheck couldn\'t fix what chronic stress had done. Here\'s what\'s actually happening in your body.')">📋 Copy</button>
+    </div>
+
+    <div class="content-card">
+      <div class="ctag">🎠 Carousel · Bold Statement</div>
+      <div class="chook">"Your body isn't broken. It's been in survival mode for too long."</div>
+      <div class="cbody">Slide 1: The statement. Slide 2: The 6 symptoms of cortisol overload. Slide 3: The cascade — stress → cortisol → hormones → weight → brain fog. Slide 4: The 4-layer reset protocol. Slide 5: First step — book your blood panel.</div>
+      <button class="copy-btn" onclick="copyText(this,'Your body isn\'t broken. It\'s been in survival mode for too long.\n\nSlide 1: The statement\nSlide 2: The 6 symptoms of cortisol overload\nSlide 3: The cascade — stress → cortisol → hormones → weight → brain fog\nSlide 4: The 4-layer reset protocol\nSlide 5: First step — book your blood panel')">📋 Copy</button>
+    </div>
+
+    <div class="content-card">
+      <div class="ctag">📝 Caption · Negative Hook</div>
+      <div class="chook">"I used to think I was just tired. Turns out I was dysregulated."</div>
+      <div class="cbody">Nobody warned me that 17 years of high-pressure work would rewire my nervous system. Brain fog wasn't laziness. Weight gain wasn't discipline. Fatigue wasn't weakness. It was cortisol. All of it. Here's what I'm doing about it. ↓</div>
+      <button class="copy-btn" onclick="copyText(this,'I used to think I was just tired. Turns out I was dysregulated.\n\nNobody warned me that 17 years of high-pressure work would rewire my nervous system. Brain fog wasn\'t laziness. Weight gain wasn\'t discipline. Fatigue wasn\'t weakness. It was cortisol. All of it. Here\'s what I\'m doing about it.')">📋 Copy</button>
+    </div>
+
+    <div class="label">Generate from your log</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;" id="gen-context">Your latest check-in data will shape the content idea.</div>
+      <button class="btn" id="gen-btn" onclick="generateContent()">✨ Generate new idea</button>
+    </div>
+    <div id="generated-content"></div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: RESET (SOMATIC ROUTINES) ══════════ -->
+<div class="screen" id="s-reset">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Reset</div>
+      <div class="topbar-sub">Somatic routines for your nervous system</div>
+    </div>
+  </div>
+  <div class="body">
+
+    <div class="insight green">
+      <div class="insight-tag">🌿 What this is</div>
+      <div class="insight-body">Body-based techniques that signal safety to your nervous system — not talk therapy, but practices that work underneath conscious thought. Pick one based on how you feel right now.</div>
+    </div>
+
+    <div class="label">Quick reset (under 5 min)</div>
+
+    <div class="routine-card" onclick="openPlayer('breath468')">
+      <div class="routine-top">
+        <div class="routine-icon">🫁</div>
+        <div class="routine-info">
+          <div class="routine-name">4-6-8 Breathing</div>
+          <div class="routine-meta">2 min · Calms anxiety, hypervigilance</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+    </div>
+
+    <div class="routine-card" onclick="openPlayer('grounding')">
+      <div class="routine-top">
+        <div class="routine-icon">🌳</div>
+        <div class="routine-info">
+          <div class="routine-name">5-4-3-2-1 Grounding</div>
+          <div class="routine-meta">3 min · Pulls you out of racing thoughts</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+    </div>
+
+    <div class="routine-card" onclick="openPlayer('orienting')">
+      <div class="routine-top">
+        <div class="routine-icon">👁️</div>
+        <div class="routine-info">
+          <div class="routine-name">Orienting</div>
+          <div class="routine-meta">2 min · Signals safety after a stress spike</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+    </div>
+
+    <div class="label">Deeper release (5–10 min)</div>
+
+    <div class="routine-card" onclick="openPlayer('bodyscan')">
+      <div class="routine-top">
+        <div class="routine-icon">🧘‍♀️</div>
+        <div class="routine-info">
+          <div class="routine-name">Body Scan</div>
+          <div class="routine-meta">6 min · Finds where stress is stored</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+    </div>
+
+    <div class="routine-card" onclick="openPlayer('pmr')">
+      <div class="routine-top">
+        <div class="routine-icon">💪</div>
+        <div class="routine-info">
+          <div class="routine-name">Progressive Muscle Relaxation</div>
+          <div class="routine-meta">8 min · Tense-release cycle, full body</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+    </div>
+
+    <div class="routine-card" onclick="openPlayer('tre')">
+      <div class="routine-top">
+        <div class="routine-icon">🌊</div>
+        <div class="routine-info">
+          <div class="routine-name">TRE Shaking Release</div>
+          <div class="routine-meta">5 min · Discharges stored tension</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+      <div class="routine-desc">Gentle shaking/tremoring — mimics how the body naturally discharges stress after a threat passes. Best done lying down, private space.</div>
+    </div>
+
+    <div class="label">Emotion & mental release</div>
+
+    <div class="routine-card" onclick="openPlayer('emotiontap')">
+      <div class="routine-top">
+        <div class="routine-icon">🫀</div>
+        <div class="routine-info">
+          <div class="routine-name">Emotion Release Tap</div>
+          <div class="routine-meta">6 min · Stuck feelings, low-grade anxiety</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+      <div class="routine-desc">Tap your breastbone while naming and accepting what you feel — without trying to fix it. Intensity rating before and after to track the shift.</div>
+    </div>
+
+    <div class="routine-card" onclick="openPlayer('sweep')">
+      <div class="routine-top">
+        <div class="routine-icon">🌙</div>
+        <div class="routine-info">
+          <div class="routine-name">Subconscious Release</div>
+          <div class="routine-meta">4 min · Before sleep, after a draining day</div>
+        </div>
+        <div class="routine-arrow">▶</div>
+      </div>
+      <div class="routine-desc">A slow mental script that gives your nervous system permission to stop carrying today's load. Best done lying down, lights off.</div>
+    </div>
+
+    <div class="label">This week</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--muted);" id="reset-stat">No somatic sessions logged yet.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ ROUTINE PLAYER OVERLAY ══════════ -->
+<div class="player-overlay" id="player-overlay">
+  <div class="player-top">
+    <div class="player-title" id="player-title">BREATHING</div>
+    <div class="player-close" onclick="closePlayer()">✕</div>
+  </div>
+  <div class="player-body">
+    <div class="timer-ring-wrap">
+      <svg viewBox="0 0 220 220">
+        <circle class="timer-ring-bg" cx="110" cy="110" r="100"></circle>
+        <circle class="timer-ring-fg" id="ring-fg" cx="110" cy="110" r="100" stroke-dasharray="628" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-center">
+        <div class="timer-phase" id="timer-phase">Ready</div>
+        <div class="timer-count" id="timer-count">Tap start</div>
+      </div>
+    </div>
+    <div class="player-instruction" id="player-instruction">Find a quiet moment. Sit or lie down comfortably.</div>
+    <div class="player-step-dots" id="player-dots"></div>
+  </div>
+  <div class="player-controls">
+    <button class="btn ghost" style="flex:1" onclick="closePlayer()">Exit</button>
+    <button class="btn" style="flex:2" id="player-start-btn" onclick="startRoutine()">▶ Start</button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: NUTRITION ══════════ -->
+<div class="screen" id="s-nutrition">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Nutrition</div>
+      <div class="topbar-sub">Mood-supporting meals · <span id="nutrition-date"></span></div>
+    </div>
+    <div class="streak-badge" id="nutrition-calories">0 kcal</div>
+  </div>
+  <div class="body">
+
+    <div class="insight green">
+      <div class="insight-tag">🥗 Your recovery nutrition focus</div>
+      <div class="insight-body">Protein stabilises blood sugar → reduces cortisol crashes. Tryptophan-rich foods support serotonin. <strong>Target: 3 meals + protein at every one.</strong></div>
+    </div>
+
+    <!-- MEAL LOG -->
+    <div class="label">Today's meals</div>
+    <div class="card" id="meal-log-card">
+      <div id="meal-list">
+        <div class="empty" style="padding:20px 0">
+          <div class="empty-icon" style="font-size:28px">🍽️</div>
+          <div class="empty-sub">No meals logged yet today</div>
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="showAddMeal()">+ Log a meal</button>
+    </div>
+
+    <!-- ADD MEAL FORM -->
+    <div id="add-meal-form" style="display:none">
+      <div class="label">Add meal</div>
+      <div class="card">
+        <div class="slider-wrap">
+          <div class="slider-row-label"><span class="slider-name">Meal type</span></div>
+          <div class="chip-wrap" id="meal-type-chips" style="margin-bottom:14px">
+            <div class="chip" onclick="selectMealType(this,'🌅 Breakfast')">🌅 Breakfast</div>
+            <div class="chip" onclick="selectMealType(this,'☀️ Lunch')">☀️ Lunch</div>
+            <div class="chip" onclick="selectMealType(this,'🌙 Dinner')">🌙 Dinner</div>
+            <div class="chip" onclick="selectMealType(this,'🍎 Snack')">🍎 Snack</div>
+          </div>
+        </div>
+
+        <div class="slider-wrap">
+          <div class="slider-row-label"><span class="slider-name">What did you eat?</span></div>
+          <textarea id="meal-desc" rows="2" placeholder="e.g. 2 eggs, brown rice, steamed veg..."></textarea>
+        </div>
+
+        <div class="slider-wrap" style="margin-top:12px">
+          <div class="slider-row-label">
+            <span class="slider-name">Protein included?</span>
+          </div>
+          <div class="chip-wrap">
+            <div class="chip" onclick="selectProtein(this,'Yes ✓')">Yes ✓</div>
+            <div class="chip" onclick="selectProtein(this,'No ✗')">No ✗</div>
+          </div>
+        </div>
+
+        <div class="slider-wrap" style="margin-top:12px">
+          <div class="slider-row-label">
+            <span class="slider-name">How did you feel after eating?</span>
+          </div>
+          <div class="chip-wrap" id="after-feel-chips">
+            <div class="chip" onclick="selectAfterFeel(this,'Energised')">⚡ Energised</div>
+            <div class="chip" onclick="selectAfterFeel(this,'Satisfied')">😊 Satisfied</div>
+            <div class="chip" onclick="selectAfterFeel(this,'Heavy')">😮‍💨 Heavy</div>
+            <div class="chip" onclick="selectAfterFeel(this,'Bloated')">💧 Bloated</div>
+            <div class="chip" onclick="selectAfterFeel(this,'Crashed')">📉 Crashed</div>
+            <div class="chip" onclick="selectAfterFeel(this,'Still hungry')">😤 Still hungry</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn ghost" style="flex:1" onclick="hideAddMeal()">Cancel</button>
+          <button class="btn" style="flex:2" onclick="saveMeal()">Save meal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WATER TRACKER -->
+    <div class="label">Water intake</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Target: 8 glasses</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent)" id="water-count">0</div>
+          <div style="font-size:11px;color:var(--dim)">glasses today</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" style="width:56px;height:44px;font-size:20px;padding:0" onclick="addWater()">+</button>
+          <button class="btn ghost" style="width:56px;height:44px;font-size:20px;padding:0" onclick="removeWater()">−</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="water-dots"></div>
+    </div>
+
+    <!-- MOOD-FOOD CONNECTION -->
+    <div class="label">Serotonin-supporting foods</div>
+    <div class="card">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Tap what you had today</div>
+      <div class="chip-wrap" id="serotonin-foods">
+        <div class="chip" onclick="toggleChip(this)">🥚 Eggs</div>
+        <div class="chip" onclick="toggleChip(this)">🍌 Banana</div>
+        <div class="chip" onclick="toggleChip(this)">🐟 Salmon/Tuna</div>
+        <div class="chip" onclick="toggleChip(this)">🌾 Oats</div>
+        <div class="chip" onclick="toggleChip(this)">🥜 Nuts</div>
+        <div class="chip" onclick="toggleChip(this)">🧆 Tofu/Tempeh</div>
+        <div class="chip" onclick="toggleChip(this)">🍫 Dark chocolate</div>
+        <div class="chip" onclick="toggleChip(this)">🥦 Leafy greens</div>
+        <div class="chip" onclick="toggleChip(this)">🍗 Chicken/Turkey</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--dim)" id="serotonin-score">Tap what you ate today</div>
+    </div>
+
+    <!-- AVOID TODAY -->
+    <div class="label">Watch out for</div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">☕</div>
+          <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Caffeine after 1PM</strong> — spikes cortisol, disrupts sleep architecture</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">🍬</div>
+          <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Sugar spikes</strong> — feel good 20 min, then crash mood and energy hard</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">⏭️</div>
+          <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Skipping meals</strong> — spikes cortisol and worsens cravings</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">🍺</div>
+          <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Alcohol</strong> — disrupts serotonin and sleep repair overnight</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<nav class="nav">
+  <div class="nav-item active" onclick="goScreen('checkin',this)">
+    <div class="nav-icon">🌿</div>
+    <div class="nav-lbl">Check In</div>
+  </div>
+  <div class="nav-item" onclick="goScreen('reset',this)">
+    <div class="nav-icon">🧘‍♀️</div>
+    <div class="nav-lbl">Reset</div>
+  </div>
+  <div class="nav-item" onclick="goScreen('nutrition',this)">
+    <div class="nav-icon">🥗</div>
+    <div class="nav-lbl">Nutrition</div>
+  </div>
+  <div class="nav-item" onclick="goScreen('patterns',this)">
+    <div class="nav-icon">📊</div>
+    <div class="nav-lbl">Patterns</div>
+  </div>
+  <div class="nav-item" onclick="goScreen('history',this)">
+    <div class="nav-icon">📋</div>
+    <div class="nav-lbl">History</div>
+  </div>
+  <div class="nav-item" onclick="goScreen('content',this)">
+    <div class="nav-icon">✍️</div>
+    <div class="nav-lbl">Content</div>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+// CROSS-DEVICE SYNC
+// Source of truth is a small JSON data file published alongside this
+// page (data/state.json). Saving on one device publishes a new version
+// of that file; opening the tracker on another device fetches it fresh.
+// If the sync capability isn't available in a given view, everything
+// falls back to that device's own local storage so the app still works.
+// ══════════════════════════════════
+const LOCAL_FALLBACK_KEY = 'sanctury_state_fallback_v1';
+let STATE = { logs: [], resets: [], nutrition: {} };
+let artifactCap = null;
+let persistTimer = null;
+
+function loadLocalFallback() {
+  try {
+    const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
+    if (raw) STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, JSON.parse(raw));
+  } catch (e) {}
+}
+
+function updateSyncStatusUI() {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = artifactCap ? '☁ Synced across your devices' : '📱 Saved on this device only';
+}
+
+async function initSync() {
+  try {
+    artifactCap = (window.claude && typeof window.claude.use === 'function')
+      ? await window.claude.use('artifact')
+      : null;
+  } catch (e) { artifactCap = null; }
+
+  if (artifactCap) {
+    try {
+      const res = await fetch('data/state.json', { cache: 'no-store' });
+      if (res.ok) {
+        const remote = await res.json();
+        STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, remote);
+      }
+    } catch (e) { /* keep local fallback data */ }
+  }
+
+  updateSyncStatusUI();
+  refreshAllViews();
+}
+
+function refreshAllViews() {
+  initGreeting();
+  initStreakBadge();
+  if (todayLogged()) markTodayLogged();
+  const active = document.querySelector('.screen.active');
+  const id = active ? active.id.replace('s-', '') : 'checkin';
+  if (id === 'patterns') renderPatterns();
+  if (id === 'history') renderHistory();
+  if (id === 'reset') updateResetStat();
+  if (id === 'nutrition') initNutritionScreen();
+}
+
+function persist() {
+  try { localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(STATE)); } catch (e) {}
+  if (!artifactCap) return;
+
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(async () => {
+    try {
+      await artifactCap.publish({ 'data/state.json': JSON.stringify(STATE) });
+    } catch (err) {
+      const code = err && err.code;
+      if (code === 'conflict') return; // another device saved first — its data wins
+      if (code === 'not_writer' || code === 'not_granted' || code === 'not_declared') {
+        artifactCap = null;
+        updateSyncStatusUI();
+        return;
+      }
+      showToast('Sync failed — saved on this device only');
+    }
+  }, 400);
+}
+
+function getLogs() { return STATE.logs || []; }
+function saveLogs(logs) { STATE.logs = logs; persist(); }
+
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function todayLogged() {
+  return getLogs().some(l => l.date === todayKey());
+}
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+let currentDateKey = todayKey();
+
+document.addEventListener('DOMContentLoaded', () => {
+  initGreeting();
+  loadLocalFallback();
+  initStreakBadge();
+  if (todayLogged()) {
+    markTodayLogged();
+  }
+  startMidnightWatcher();
+  initSync();
+});
+
+// Checks every minute if the date has rolled over (handles tabs left open past midnight)
+function startMidnightWatcher() {
+  setInterval(() => {
+    const newKey = todayKey();
+    if (newKey !== currentDateKey) {
+      currentDateKey = newKey;
+      initGreeting();
+      initStreakBadge();
+      resetCheckinForm();
+      showToast('New day — check-in reset 🌅');
+    }
+  }, 60000); // check every 60 seconds
+}
+
+function resetCheckinForm() {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('sel'));
+  selectedMood = null;
+  document.getElementById('energy-slider').value = 5;
+  document.getElementById('ev').textContent = 5;
+  document.getElementById('clarity-slider').value = 5;
+  document.getElementById('cv').textContent = 5;
+  document.getElementById('sleep-slider').value = 5;
+  document.getElementById('sv').textContent = 5;
+  document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('#habit-card .habit-row').forEach(toggleHabitReset);
+  document.getElementById('notes-input').value = '';
+  const saveBtn = document.querySelector('.btn[onclick="saveCheckin()"]');
+  if (saveBtn) saveBtn.textContent = "Save today's check-in";
+}
+
+function toggleHabitReset(row) {
+  const check = row.querySelector('.hcheck');
+  const time = row.querySelector('.htime');
+  check.classList.remove('done');
+  const times = {'sunlight':'6–7AM','nophone':'AM','breathing':'AM','protein':'8AM','magnesium':'7PM','screens':'9:30PM'};
+  time.textContent = times[row.dataset.habit] || '';
+  time.classList.remove('done-lbl');
+}
+
+function initGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = greet + ', Jen 🌿';
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-SG', {weekday:'long', day:'numeric', month:'long'});
+}
+
+function initStreakBadge() {
+  const streak = getStreak();
+  const el = document.getElementById('streak-badge');
+  if (streak === 0) { el.textContent = 'Day 1 🌱'; return; }
+  const icons = streak >= 7 ? '🔥🔥' : streak >= 3 ? '🔥' : '🌱';
+  el.textContent = `Day ${streak} ${icons}`;
+}
+
+function getStreak() {
+  const logs = getLogs();
+  if (!logs.length) return 0;
+  const sorted = [...logs].sort((a,b)=>b.date.localeCompare(a.date));
+  let streak = 0;
+  let d = new Date();
+  // allow today or yesterday as starting point
+  for (let i = 0; i < sorted.length; i++) {
+    const logDate = sorted[i].date;
+    const expected = d.toISOString().slice(0,10);
+    const yesterday = new Date(d); yesterday.setDate(d.getDate()-1);
+    const yStr = yesterday.toISOString().slice(0,10);
+    if (logDate === expected || (streak === 0 && logDate === yStr)) {
+      streak++;
+      d = new Date(logDate);
+      d.setDate(d.getDate()-1);
+    } else break;
+  }
+  return streak;
+}
+
+function markTodayLogged() {
+  document.querySelector('.btn[onclick="saveCheckin()"]').textContent = '✓ Already logged today — update?';
+}
+
+// ══════════════════════════════════
+// CHECK IN INTERACTIONS
+// ══════════════════════════════════
+let selectedMood = null;
+
+function pickMood(el) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedMood = el.dataset.mood;
+}
+
+function toggleChip(el) { el.classList.toggle('on'); }
+
+function toggleHabit(el) {
+  const check = el.querySelector('.hcheck');
+  const time = el.querySelector('.htime');
+  const isDone = check.classList.toggle('done');
+  time.classList.toggle('done-lbl', isDone);
+  if (isDone) time.textContent = 'Done ✓';
+  else {
+    // restore original time
+    const times = {'sunlight':'6–7AM','nophone':'AM','breathing':'AM','protein':'8AM','magnesium':'7PM','screens':'9:30PM'};
+    time.textContent = times[el.dataset.habit] || '';
+  }
+}
+
+function getCheckedHabits() {
+  const rows = document.querySelectorAll('#habit-card .habit-row');
+  const done = [];
+  rows.forEach(r => { if (r.querySelector('.hcheck.done')) done.push(r.dataset.habit); });
+  return done;
+}
+
+function getActiveSymptoms() {
+  const chips = document.querySelectorAll('#symptom-chips .chip.on');
+  return Array.from(chips).map(c => c.textContent.trim());
+}
+
+// ══════════════════════════════════
+// SAVE CHECK-IN
+// ══════════════════════════════════
+function saveCheckin() {
+  const energy = parseInt(document.getElementById('energy-slider').value);
+  const clarity = parseInt(document.getElementById('clarity-slider').value);
+  const sleep = parseInt(document.getElementById('sleep-slider').value);
+  const mood = selectedMood;
+  const symptoms = getActiveSymptoms();
+  const habits = getCheckedHabits();
+  const notes = document.getElementById('notes-input').value.trim();
+
+  if (!mood) { showToast('Pick a mood first'); return; }
+
+  const log = {
+    date: todayKey(),
+    timestamp: new Date().toISOString(),
+    mood, energy, clarity, sleep,
+    symptoms, habits, notes
+  };
+
+  const logs = getLogs().filter(l => l.date !== todayKey()); // replace today if exists
+  logs.push(log);
+  saveLogs(logs);
+
+  initStreakBadge();
+  markTodayLogged();
+  showToast('Check-in saved ✓ Day ' + getStreak());
+  updateContentInsight();
+}
+
+// ══════════════════════════════════
+// SCREEN NAVIGATION
+// ══════════════════════════════════
+function goScreen(name, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('s-' + name).classList.add('active');
+  navEl.classList.add('active');
+  window.scrollTo(0,0);
+
+  if (name === 'patterns') renderPatterns();
+  if (name === 'history') renderHistory();
+  if (name === 'content') updateContentInsight();
+  if (name === 'reset') updateResetStat();
+  if (name === 'nutrition') initNutritionScreen();
+}
+
+// ══════════════════════════════════
+// PATTERNS SCREEN
+// ══════════════════════════════════
+function renderPatterns() {
+  const logs = getLogs();
+  const body = document.getElementById('patterns-body');
+
+  if (!logs.length) {
+    body.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No data yet</div><div class="empty-sub">Complete your first check-in to see patterns.</div></div>`;
+    return;
+  }
+
+  const streak = getStreak();
+  const avgEnergy = avg(logs.map(l=>l.energy));
+  const avgClarity = avg(logs.map(l=>l.clarity));
+  const avgSleep = avg(logs.map(l=>l.sleep));
+  const totalHabits = logs.reduce((s,l)=>s+(l.habits||[]).length,0);
+  const avgHabits = (totalHabits / logs.length).toFixed(1);
+
+  // symptom frequency
+  const symCount = {};
+  logs.forEach(l=>(l.symptoms||[]).forEach(s=>{symCount[s]=(symCount[s]||0)+1;}));
+  const sortedSym = Object.entries(symCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // mood frequency
+  const moodCount = {};
+  logs.forEach(l=>{if(l.mood)moodCount[l.mood]=(moodCount[l.mood]||0)+1;});
+  const topMood = Object.entries(moodCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // streak dots (last 7 days)
+  const last7 = [];
+  for (let i=6;i>=0;i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const dayLabel = d.toLocaleDateString('en-SG',{weekday:'short'}).slice(0,1);
+    const hasLog = logs.some(l=>l.date===key);
+    const isToday = i===0;
+    last7.push({key,dayLabel,hasLog,isToday});
+  }
+
+  const streakDots = last7.map(d=>`<div class="sdot ${d.isToday&&d.hasLog?'today':d.hasLog?'done':''}">${d.dayLabel}</div>`).join('');
+
+  // insight
+  const insight = generateInsight(logs, avgEnergy, avgSleep, sortedSym);
+
+  // bar chart HTML
+  const bars = sortedSym.map(([sym, count])=>{
+    const pct = Math.round((count/logs.length)*100);
+    const cls = pct>=80?'danger':pct>=50?'warn':'';
+    return `<div class="bar-item">
+      <div class="bar-label-row"><span>${sym}</span><span style="color:var(--muted)">${count}/${logs.length} days</span></div>
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // trend arrow helpers
+  const recentLogs = logs.slice(-3);
+  const olderLogs = logs.slice(0,-3);
+  const trendE = olderLogs.length ? (avg(recentLogs.map(l=>l.energy)) - avg(olderLogs.map(l=>l.energy))).toFixed(1) : null;
+  const trendS = olderLogs.length ? (avg(recentLogs.map(l=>l.sleep)) - avg(olderLogs.map(l=>l.sleep))).toFixed(1) : null;
+
+  document.getElementById('pattern-sub').textContent = `Based on ${logs.length} check-in${logs.length!==1?'s':''}`;
+
+  body.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-val">${streak}</div>
+        <div class="stat-unit">Day streak</div>
+        <div class="stat-trend ${streak>=3?'up':'neu'}">${streak>=3?'🔥 On track':'Keep going'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${avgEnergy.toFixed(1)}</div>
+        <div class="stat-unit">Avg energy /10</div>
+        <div class="stat-trend ${trendE>0?'up':trendE<0?'dn':'neu'}">${trendE!==null?(trendE>0?'↑ +'+trendE:trendE<0?'↓ '+trendE:'→ Stable'):'First log'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${avgSleep.toFixed(1)}</div>
+        <div class="stat-unit">Avg sleep quality</div>
+        <div class="stat-trend ${trendS>0?'up':trendS<0?'dn':'neu'}">${trendS!==null?(trendS>0?'↑ Improving':trendS<0?'↓ Declining':'→ Stable'):'First log'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${avgHabits}</div>
+        <div class="stat-unit">Habits/day avg</div>
+        <div class="stat-trend ${avgHabits>=4?'up':'neu'}">${avgHabits>=4?'↑ Strong':'Build more'}</div>
+      </div>
+    </div>
+
+    <div class="label">This week</div>
+    <div class="card">
+      <div class="streak-row">${streakDots}</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted);">${logs.length} check-in${logs.length!==1?'s':''} total · Most common mood: <span style="color:var(--accent)">${topMood?topMood[0]:'—'}</span></div>
+    </div>
+
+    ${insight}
+
+    ${sortedSym.length ? `
+    <div class="label">Symptom frequency</div>
+    <div class="card"><div class="bar-list">${bars}</div></div>
+    ` : ''}
+
+    <div class="label">Average scores</div>
+    <div class="card">
+      <div class="bar-list">
+        <div class="bar-item">
+          <div class="bar-label-row"><span style="color:var(--muted)">Energy</span><span style="color:var(--accent)">${avgEnergy.toFixed(1)}/10</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${avgEnergy*10}%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label-row"><span style="color:var(--muted)">Mental clarity</span><span style="color:var(--accent)">${avgClarity.toFixed(1)}/10</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${avgClarity*10}%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label-row"><span style="color:var(--muted)">Sleep quality</span><span style="color:var(--accent)">${avgSleep.toFixed(1)}/10</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${avgSleep*10}%"></div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generateInsight(logs, avgEnergy, avgSleep, sortedSym) {
+  const topSym = sortedSym[0]?.[0] || null;
+  const n = logs.length;
+  let msg = '';
+
+  if (avgSleep < 5) {
+    msg = `Sleep quality is averaging <strong>${avgSleep.toFixed(1)}/10</strong> — this is your biggest recovery blocker. Cortisol cannot reset without deep sleep. Prioritise the 9:30PM screen curfew and Bioglan tonight.`;
+    return `<div class="insight amber"><div class="insight-tag">⚠️ Priority flag</div><div class="insight-body">${msg}</div></div>`;
+  }
+  if (avgEnergy < 5) {
+    msg = `Energy is averaging <strong>${avgEnergy.toFixed(1)}/10</strong> across ${n} check-ins. Low energy this persistent usually points to cortisol dysregulation or low ferritin. Has your blood panel been booked yet?`;
+    return `<div class="insight amber"><div class="insight-tag">⚠️ Watch this</div><div class="insight-body">${msg}</div></div>`;
+  }
+  if (topSym && topSym.includes('Brain fog')) {
+    msg = `Brain fog is your most frequent symptom. It typically peaks 2–3 hours after waking when cortisol drops. Try adding <strong>protein at breakfast</strong> and doing breathing exercises before 9AM.`;
+    return `<div class="insight amber"><div class="insight-tag">📊 Pattern detected</div><div class="insight-body">${msg}</div></div>`;
+  }
+  if (avgEnergy >= 7) {
+    msg = `Energy is averaging <strong>${avgEnergy.toFixed(1)}/10</strong> — your protocol is working. Keep the streak going. Nervous system recovery takes 8–12 weeks of consistent input.`;
+    return `<div class="insight green"><div class="insight-tag">✅ Good signal</div><div class="insight-body">${msg}</div></div>`;
+  }
+  msg = `${n} check-in${n!==1?'s':''} logged. Keep building the dataset — patterns become clear after 7+ days.`;
+  return `<div class="insight green"><div class="insight-tag">🌿 Building baseline</div><div class="insight-body">${msg}</div></div>`;
+}
+
+// ══════════════════════════════════
+// HISTORY SCREEN
+// ══════════════════════════════════
+function renderHistory() {
+  const logs = getLogs().slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const body = document.getElementById('history-body');
+  document.getElementById('history-sub').textContent = `${logs.length} check-in${logs.length!==1?'s':''} saved`;
+
+  if (!logs.length) {
+    body.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No check-ins yet</div><div class="empty-sub">Your daily logs will appear here once you save your first check-in.</div></div>`;
+    return;
+  }
+
+  body.innerHTML = `<div class="card">${logs.map(l => {
+    const d = new Date(l.date).toLocaleDateString('en-SG',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    const habits = (l.habits||[]).length;
+    const syms = (l.symptoms||[]).join(' · ') || 'No symptoms logged';
+    return `<div class="log-item">
+      <div class="log-date">${d}</div>
+      <div class="log-meta">
+        <span class="log-pill">${l.mood || '—'}</span>
+        <span class="log-pill accent">⚡ ${l.energy}/10</span>
+        <span class="log-pill accent">🧠 ${l.clarity}/10</span>
+        <span class="log-pill accent">🌙 ${l.sleep}/10</span>
+        <span class="log-pill">✓ ${habits}/6 habits</span>
+      </div>
+      <div class="log-symptoms">${syms}</div>
+      ${l.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic;">"${l.notes}"</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function confirmClear() {
+  if (confirm('Delete all check-ins? This cannot be undone.')) {
+    STATE.logs = [];
+    persist();
+    renderHistory();
+    initStreakBadge();
+    showToast('All logs cleared');
+  }
+}
+
+// ══════════════════════════════════
+// CONTENT INSIGHT
+// ══════════════════════════════════
+function updateContentInsight() {
+  const logs = getLogs();
+  if (!logs.length) return;
+  const latest = logs[logs.length-1];
+  const streak = getStreak();
+  const topSym = (latest.symptoms||[])[0] || null;
+
+  let msg = `You've logged <strong>${streak} day${streak!==1?'s':''}</strong> straight`;
+  if (topSym) msg += ` with <strong>${topSym}</strong> as a key symptom`;
+  msg += `. That's your content. Real data, real story.`;
+  document.getElementById('content-insight-body').innerHTML = msg;
+
+  const ctx = document.getElementById('gen-context');
+  if (ctx) ctx.textContent = `Based on: ${latest.mood} mood · Energy ${latest.energy}/10 · ${(latest.symptoms||[]).slice(0,2).join(', ') || 'no symptoms'} · ${streak}-day streak`;
+}
+
+// ══════════════════════════════════
+// CONTENT GENERATOR
+// ══════════════════════════════════
+const contentPool = [
+  {
+    tag: '🎬 Reel · Solution Hook',
+    hook: '"3 things I do every morning to protect my energy."',
+    body: 'Sunlight before phone. Protein before coffee. 4-6-8 breath before meetings. My nervous system needed a reset, not a push. Here\'s why these three things changed my afternoons. ↓'
+  },
+  {
+    tag: '📝 Caption · Process Hook',
+    hook: '"What tracking my nervous system for 7 days taught me."',
+    body: 'Day 1: All 6 symptoms at once. Day 3: Brain fog started lifting. Day 7: First night of real sleep. The data doesn\'t lie. Your body is always telling you something — you just need to start listening.'
+  },
+  {
+    tag: '🎠 Carousel · Outlier Hook',
+    hook: '"The doctor said my bloods were normal. But I felt terrible."',
+    body: 'Normal range ≠ optimal range. Here\'s what to actually ask for: Cortisol (AM). Free T3 + T4. Oestrogen + Progesterone. Fasting insulin. Ferritin. Vitamin D. These 6 tests changed everything.'
+  },
+  {
+    tag: '🎬 Reel · Negative Hook',
+    hook: '"I spent 17 years building a career that was slowly destroying my health."',
+    body: 'Not dramatically. Slowly. One skipped meal, one missed sleep, one cortisol spike at a time. By the time I resigned, my body had been in survival mode for years. Here\'s what that actually looks like.'
+  },
+  {
+    tag: '📝 Caption · Lifestyle Hook',
+    hook: '"My evening routine now that I understand my nervous system."',
+    body: '7PM — Bioglan Magnesium + Ashwagandha. 9PM — lights dimmed, no screens. 9:30PM — phone off, room cool. No more doomscrolling. No more 11PM anxiety spirals. Sleep changed everything else.'
+  },
+  {
+    tag: '🎠 Carousel · Bold Statement',
+    hook: '"Cortisol is the reason you can\'t lose weight. Not willpower."',
+    body: 'When cortisol is high: your body stores fat, especially at the abdomen. Cravings increase. Sleep quality drops. Motivation disappears. It\'s not a discipline problem. It\'s a hormonal environment problem.'
+  },
+];
+
+let genIndex = 0;
+
+function generateContent() {
+  const btn = document.getElementById('gen-btn');
+  btn.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    const idea = contentPool[genIndex % contentPool.length];
+    genIndex++;
+
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.innerHTML = `
+      <div class="ctag">${idea.tag}</div>
+      <div class="chook">${idea.hook}</div>
+      <div class="cbody">${idea.body}</div>
+      <button class="copy-btn" onclick="copyText(this,'${idea.hook.replace(/'/g,"\\'")}\\n\\n${idea.body.replace(/'/g,"\\'")}')">📋 Copy</button>
+    `;
+
+    const container = document.getElementById('generated-content');
+    container.insertBefore(card, container.firstChild);
+
+    btn.innerHTML = '✨ Generate another idea';
+    btn.disabled = false;
+    showToast('New idea generated ✓');
+  }, 1600);
+}
+
+// ══════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--accent)';
+    setTimeout(()=>{ btn.textContent = '📋 Copy'; btn.style.color = ''; }, 2000);
+  }).catch(()=>showToast('Copy failed — select manually'));
+}
+
+// ══════════════════════════════════
+// SOMATIC ROUTINES
+// ══════════════════════════════════
+
+
+const ROUTINES = {
+  breath468: {
+    name: '4-6-8 BREATHING',
+    steps: [
+      { phase: 'Inhale', duration: 4, instruction: 'Breathe in slowly through your nose. Fill your belly first, then chest.' },
+      { phase: 'Hold', duration: 6, instruction: 'Hold gently. Relax your jaw and shoulders.' },
+      { phase: 'Exhale', duration: 8, instruction: 'Breathe out through your mouth, slow and complete.' },
+      { phase: 'Inhale', duration: 4, instruction: 'Again — breathe in through your nose.' },
+      { phase: 'Hold', duration: 6, instruction: 'Hold. Notice the stillness.' },
+      { phase: 'Exhale', duration: 8, instruction: 'Long slow exhale. Let everything go.' },
+      { phase: 'Inhale', duration: 4, instruction: 'Third cycle. Breathe in.' },
+      { phase: 'Hold', duration: 6, instruction: 'Hold. Your nervous system is slowing down.' },
+      { phase: 'Exhale', duration: 8, instruction: 'Final exhale. You are safe.' },
+      { phase: 'Rest', duration: 5, instruction: 'Rest. Breathe naturally. Notice how your body feels.' },
+    ]
+  },
+  grounding: {
+    name: '5-4-3-2-1 GROUNDING',
+    steps: [
+      { phase: 'Settle', duration: 10, instruction: 'Sit with both feet flat on the floor. Take one slow breath.' },
+      { phase: '5 things', duration: 30, instruction: 'Look around and name 5 things you can SEE. Say them silently or aloud. Take your time.' },
+      { phase: '4 things', duration: 25, instruction: 'Notice 4 things you can TOUCH. Feel the texture of your clothes, the chair, the floor.' },
+      { phase: '3 things', duration: 20, instruction: 'Listen for 3 things you can HEAR. Near sounds, far sounds, background sounds.' },
+      { phase: '2 things', duration: 15, instruction: 'Notice 2 things you can SMELL — or recall a scent you love.' },
+      { phase: '1 thing', duration: 10, instruction: 'Notice 1 thing you can TASTE. Is there a taste in your mouth right now?' },
+      { phase: 'Anchor', duration: 15, instruction: 'Take a slow breath. You are here. You are safe. The threat has passed.' },
+    ]
+  },
+  orienting: {
+    name: 'ORIENTING',
+    steps: [
+      { phase: 'Settle', duration: 8, instruction: 'Sit or stand. Let your hands rest. Take one natural breath.' },
+      { phase: 'Look around', duration: 20, instruction: 'Slowly turn your head and eyes around the room — like you\'re seeing it for the first time. No rush.' },
+      { phase: 'Find safety', duration: 15, instruction: 'Find one thing in the room that feels neutral or pleasant. Rest your gaze there.' },
+      { phase: 'Body check', duration: 15, instruction: 'Notice your feet on the floor. Your back against the chair. You are supported.' },
+      { phase: 'Look again', duration: 20, instruction: 'Slowly scan the room again. Notice: there is no threat here. You are safe.' },
+      { phase: 'Breathe', duration: 12, instruction: 'Take a slow breath out. Feel your shoulders drop. This is what safety feels like.' },
+    ]
+  },
+  bodyscan: {
+    name: 'BODY SCAN',
+    steps: [
+      { phase: 'Begin', duration: 15, instruction: 'Lie down or sit comfortably. Close your eyes. Take three natural breaths.' },
+      { phase: 'Feet', duration: 20, instruction: 'Bring attention to your feet. Notice any sensation — warmth, tingling, tension. Just observe, don\'t fix.' },
+      { phase: 'Legs', duration: 20, instruction: 'Move attention up to your calves, knees, thighs. Where is there tightness? Just notice.' },
+      { phase: 'Hips & belly', duration: 20, instruction: 'Notice your hips and belly. This is where stress often lives. Does your belly feel tight or held?' },
+      { phase: 'Chest', duration: 20, instruction: 'Feel your chest. Is your breathing shallow or deep? Notice your heart. No judgment.' },
+      { phase: 'Shoulders', duration: 20, instruction: 'Bring attention to your shoulders. Are they raised? Let them drop on the exhale.' },
+      { phase: 'Neck & jaw', duration: 20, instruction: 'Notice your neck and jaw. These hold enormous tension. Soften your jaw — let your teeth part slightly.' },
+      { phase: 'Face', duration: 15, instruction: 'Relax your forehead, eyes, cheeks. Let your face go completely soft.' },
+      { phase: 'Whole body', duration: 20, instruction: 'Now feel your whole body at once. Notice what shifted. What feels different from when you started?' },
+      { phase: 'Rest', duration: 20, instruction: 'Stay here. Breathe. You don\'t have to do anything. You are allowed to rest.' },
+    ]
+  },
+  pmr: {
+    name: 'MUSCLE RELAXATION',
+    steps: [
+      { phase: 'Settle', duration: 10, instruction: 'Lie down or sit. Take two slow breaths to prepare.' },
+      { phase: 'Feet — tense', duration: 7, instruction: 'Curl your toes tightly. Hold the tension.' },
+      { phase: 'Feet — release', duration: 10, instruction: 'Release. Feel the difference. Let that area go completely soft.' },
+      { phase: 'Legs — tense', duration: 7, instruction: 'Tighten your calf muscles and thighs. Hold.' },
+      { phase: 'Legs — release', duration: 10, instruction: 'Release. Notice the warmth and softness flooding in.' },
+      { phase: 'Belly — tense', duration: 7, instruction: 'Pull your belly button in. Hold tight.' },
+      { phase: 'Belly — release', duration: 10, instruction: 'Release. Breathe out fully.' },
+      { phase: 'Hands — tense', duration: 7, instruction: 'Make fists. Squeeze as tight as you can. Hold.' },
+      { phase: 'Hands — release', duration: 10, instruction: 'Open your hands. Feel the tension drain away.' },
+      { phase: 'Shoulders — tense', duration: 7, instruction: 'Shrug your shoulders up to your ears. Hold.' },
+      { phase: 'Shoulders — release', duration: 10, instruction: 'Drop them completely. Feel the weight leave.' },
+      { phase: 'Face — tense', duration: 7, instruction: 'Scrunch your whole face — eyes, nose, jaw. Hold.' },
+      { phase: 'Face — release', duration: 10, instruction: 'Let it all go. Soft jaw, soft eyes, soft forehead.' },
+      { phase: 'Whole body', duration: 20, instruction: 'Your whole body is now relaxed. Breathe slowly. You\'ve discharged tension from every major muscle group.' },
+    ]
+  },
+  tre: {
+    name: 'TRE SHAKING RELEASE',
+    steps: [
+      { phase: 'Prepare', duration: 15, instruction: 'Lie on your back. Bend your knees with feet flat on the floor, shoulder-width apart.' },
+      { phase: 'Activate', duration: 20, instruction: 'Slowly raise your hips slightly, then lower. Repeat gently 5 times to warm up the legs.' },
+      { phase: 'Bridge hold', duration: 30, instruction: 'Raise hips into a bridge. Hold. Notice if your legs begin to tremble — this is natural and good.' },
+      { phase: 'Lower & allow', duration: 20, instruction: 'Lower hips to the floor. Keep knees bent. Allow any trembling in your legs to continue naturally.' },
+      { phase: 'Shake', duration: 40, instruction: 'Let the trembling or shaking happen without controlling it. This is your nervous system discharging stored tension. Breathe.' },
+      { phase: 'Rest', duration: 20, instruction: 'Let legs go flat. Rest completely. Notice what shifted in your body.' },
+      { phase: 'Breathe', duration: 20, instruction: 'Take slow, deep breaths. Notice any warmth, tingling, or sense of release in your legs or back.' },
+      { phase: 'Complete', duration: 15, instruction: 'Gently hug your knees to your chest. Rock slightly. You\'ve released stored tension from your body.' },
+    ]
+  },
+
+  emotiontap: {
+    name: 'EMOTION RELEASE TAP',
+    steps: [
+      { phase: 'Name it', duration: 30, instruction: 'Sit still. Name what you\'re feeling in one word — overwhelmed, anxious, stuck, heavy. Rate the intensity 0–10 in your mind.' },
+      { phase: 'Start tapping', duration: 30, instruction: 'Place 2–3 fingers on the centre of your breastbone. Tap steadily. Not hard — just firm enough to feel it.' },
+      { phase: 'Accept it', duration: 60, instruction: 'Keep tapping. Say silently or aloud, 3 times: "Even though I feel this, I accept that this is where I am right now." No fixing. Just acknowledging.' },
+      { phase: 'Just notice', duration: 120, instruction: 'Continue tapping. Let the feeling exist without trying to change it. Notice where you feel it — chest, throat, stomach. Just observe.' },
+      { phase: 'Breathe', duration: 30, instruction: 'Stop tapping. Take 3 slow breaths. Re-rate the intensity 0–10. Has anything shifted, even slightly?' },
+      { phase: 'Choose calm', duration: 60, instruction: 'If intensity dropped — tap again. This time say 5 times: "I choose to feel calm and clear." Slow, deliberate, meaning it.' },
+      { phase: 'Close', duration: 30, instruction: 'Rest your hand over your chest. Notice any shift — warmth, lightness, space. Even small counts. You did the work.' },
+    ]
+  },
+
+  sweep: {
+    name: 'SUBCONSCIOUS RELEASE',
+    steps: [
+      { phase: 'Settle', duration: 45, instruction: 'Sit or lie down. Close your eyes. Take 3 deep breaths — in through the nose, out through the mouth. Let your body get heavy.' },
+      { phase: 'The sweep', duration: 60, instruction: 'Read this slowly in your mind:\n"I\'m noticing what I\'m carrying right now. I don\'t need to solve it tonight. I\'m allowed to set it down for now. My mind and body get to rest, even if things aren\'t finished. I\'ll pick this back up when I\'m ready — not before."' },
+      { phase: 'Just be', duration: 120, instruction: 'No words. No phrases. Just silence. Notice your body softening. Let your breath slow on its own. You don\'t have to do anything right now.' },
+      { phase: 'Land', duration: 15, instruction: 'Gently open your eyes. Notice one word for how you feel now compared to when you started.' },
+    ]
+  }
+};
+
+let currentRoutine = null;
+let currentStep = 0;
+let timerInterval = null;
+let secondsLeft = 0;
+let isRunning = false;
+
+function openPlayer(routineKey) {
+  currentRoutine = ROUTINES[routineKey];
+  currentRoutineKey = routineKey;
+  currentStep = 0;
+  isRunning = false;
+
+  document.getElementById('player-title').textContent = currentRoutine.name;
+  document.getElementById('timer-phase').textContent = 'Ready';
+  document.getElementById('timer-count').textContent = 'Tap start';
+  document.getElementById('player-instruction').textContent = 'Find a quiet moment. Sit or lie down comfortably.';
+  document.getElementById('player-start-btn').textContent = '▶ Start';
+
+  // build dots
+  const dots = document.getElementById('player-dots');
+  dots.innerHTML = currentRoutine.steps.map((_, i) =>
+    `<div class="step-dot ${i===0?'active':''}"></div>`
+  ).join('');
+
+  // reset ring
+  setRing(0, 1);
+
+  document.getElementById('player-overlay').classList.add('active');
+}
+
+let currentRoutineKey = null;
+
+function closePlayer() {
+  clearInterval(timerInterval);
+  isRunning = false;
+  document.getElementById('player-overlay').classList.remove('active');
+}
+
+function startRoutine() {
+  if (isRunning) {
+    // pause
+    clearInterval(timerInterval);
+    isRunning = false;
+    document.getElementById('player-start-btn').textContent = '▶ Resume';
+    return;
+  }
+  isRunning = true;
+  document.getElementById('player-start-btn').textContent = '⏸ Pause';
+  runStep(currentStep);
+}
+
+function runStep(stepIndex) {
+  if (stepIndex >= currentRoutine.steps.length) {
+    completeRoutine();
+    return;
+  }
+  currentStep = stepIndex;
+  const step = currentRoutine.steps[stepIndex];
+  secondsLeft = step.duration;
+
+  document.getElementById('timer-phase').textContent = step.phase;
+  document.getElementById('timer-count').textContent = secondsLeft + 's';
+  document.getElementById('player-instruction').textContent = step.instruction;
+
+  // update dots
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === stepIndex);
+  });
+
+  setRing(0, step.duration);
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (!isRunning) return;
+    secondsLeft--;
+    document.getElementById('timer-count').textContent = secondsLeft + 's';
+    setRing(step.duration - secondsLeft, step.duration);
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      runStep(stepIndex + 1);
+    }
+  }, 1000);
+}
+
+function setRing(elapsed, total) {
+  const circumference = 628;
+  const progress = total > 0 ? elapsed / total : 0;
+  const offset = circumference * (1 - progress);
+  document.getElementById('ring-fg').style.strokeDashoffset = offset;
+}
+
+function completeRoutine() {
+  clearInterval(timerInterval);
+  isRunning = false;
+  document.getElementById('timer-phase').textContent = '✓ Done';
+  document.getElementById('timer-count').textContent = 'Complete';
+  document.getElementById('player-instruction').textContent = 'Well done. Take a moment to notice how your body feels right now.';
+  document.getElementById('player-start-btn').textContent = '✓ Complete';
+  setRing(1, 1);
+
+  // save the completed session
+  const resets = STATE.resets || [];
+  resets.push({ date: todayKey(), routine: currentRoutineKey, name: currentRoutine.name, timestamp: new Date().toISOString() });
+  STATE.resets = resets;
+  persist();
+
+  showToast(currentRoutine.name + ' complete ✓');
+  updateResetStat();
+}
+
+function updateResetStat() {
+  const resets = STATE.resets || [];
+  const el = document.getElementById('reset-stat');
+  if (!el) return;
+  if (!resets.length) { el.textContent = 'No somatic sessions logged yet.'; return; }
+
+  // last 7 days
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    last7.push(d.toISOString().slice(0, 10));
+  }
+  const thisWeek = resets.filter(r => last7.includes(r.date));
+  const total = resets.length;
+  const lastRoutine = resets[resets.length - 1];
+
+  el.innerHTML = `<span style="color:var(--accent);font-weight:600">${thisWeek.length} session${thisWeek.length!==1?'s':''} this week</span> · ${total} total · Last: ${lastRoutine.name}`;
+}
+
+// ══════════════════════════════════
+// NUTRITION TRACKER
+// ══════════════════════════════════
+
+let selectedMealType = null;
+let selectedProtein = null;
+let selectedAfterFeel = null;
+let waterCount = 0;
+
+function getNutritionLog() { return STATE.nutrition || {}; }
+function saveNutritionLog(data) { STATE.nutrition = data; persist(); }
+
+function initNutritionScreen() {
+  document.getElementById('nutrition-date').textContent = new Date().toLocaleDateString('en-SG', {weekday:'short', day:'numeric', month:'short'});
+  const log = getNutritionLog();
+  const today = log[todayKey()] || { meals: [], water: 0, serotoninFoods: [] };
+  waterCount = today.water || 0;
+  renderMealList(today.meals || []);
+  renderWaterDots();
+  updateSerotoninScore(today.serotoninFoods || []);
+}
+
+// ── MEAL LOGGING ──
+function showAddMeal() {
+  document.getElementById('add-meal-form').style.display = 'block';
+  selectedMealType = null;
+  selectedProtein = null;
+  selectedAfterFeel = null;
+  document.getElementById('meal-desc').value = '';
+  document.querySelectorAll('#meal-type-chips .chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('#after-feel-chips .chip').forEach(c => c.classList.remove('on'));
+}
+
+function hideAddMeal() {
+  document.getElementById('add-meal-form').style.display = 'none';
+}
+
+function selectMealType(el, type) {
+  document.querySelectorAll('#meal-type-chips .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  selectedMealType = type;
+}
+
+function selectProtein(el, val) {
+  el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  selectedProtein = val;
+}
+
+function selectAfterFeel(el, val) {
+  document.querySelectorAll('#after-feel-chips .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  selectedAfterFeel = val;
+}
+
+function saveMeal() {
+  const desc = document.getElementById('meal-desc').value.trim();
+  if (!selectedMealType) { showToast('Select a meal type'); return; }
+  if (!desc) { showToast('Describe what you ate'); return; }
+
+  const meal = {
+    type: selectedMealType,
+    desc,
+    protein: selectedProtein || 'Not noted',
+    feel: selectedAfterFeel || 'Not noted',
+    time: new Date().toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })
+  };
+
+  const log = getNutritionLog();
+  const today = log[todayKey()] || { meals: [], water: 0, serotoninFoods: [] };
+  today.meals.push(meal);
+  log[todayKey()] = today;
+  saveNutritionLog(log);
+
+  renderMealList(today.meals);
+  hideAddMeal();
+  showToast('Meal logged ✓');
+}
+
+function renderMealList(meals) {
+  const el = document.getElementById('meal-list');
+  if (!meals.length) {
+    el.innerHTML = `<div class="empty" style="padding:20px 0"><div class="empty-icon" style="font-size:28px">🍽️</div><div class="empty-sub">No meals logged yet today</div></div>`;
+    return;
+  }
+  el.innerHTML = meals.map((m, i) => `
+    <div class="log-item">
+      <div class="log-date">${m.type} · ${m.time}</div>
+      <div style="font-size:14px;color:var(--text);margin-bottom:6px">${m.desc}</div>
+      <div class="log-meta">
+        <span class="log-pill ${m.protein==='Yes ✓'?'accent':''}">Protein: ${m.protein}</span>
+        <span class="log-pill">After: ${m.feel}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── WATER TRACKER ──
+function addWater() {
+  if (waterCount >= 12) return;
+  waterCount++;
+  saveWater();
+  renderWaterDots();
+}
+
+function removeWater() {
+  if (waterCount <= 0) return;
+  waterCount--;
+  saveWater();
+  renderWaterDots();
+}
+
+function saveWater() {
+  const log = getNutritionLog();
+  const today = log[todayKey()] || { meals: [], water: 0, serotoninFoods: [] };
+  today.water = waterCount;
+  log[todayKey()] = today;
+  saveNutritionLog(log);
+}
+
+function renderWaterDots() {
+  document.getElementById('water-count').textContent = waterCount;
+  const target = 8;
+  const dots = document.getElementById('water-dots');
+  dots.innerHTML = Array.from({length: target}, (_, i) =>
+    `<div style="width:28px;height:28px;border-radius:50%;background:${i < waterCount ? 'var(--accent)' : 'var(--s2)'};border:1px solid ${i < waterCount ? 'var(--accent)' : 'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:14px">${i < waterCount ? '💧' : ''}</div>`
+  ).join('');
+
+  if (waterCount >= 8) showToast('Hydration goal reached 💧');
+}
+
+// ── SEROTONIN FOODS ──
+function updateSerotoninScore(saved) {
+  const chips = document.querySelectorAll('#serotonin-foods .chip');
+  chips.forEach(c => {
+    if (saved.includes(c.textContent.trim())) c.classList.add('on');
+    c.onclick = () => {
+      c.classList.toggle('on');
+      saveSerotoninFoods();
+    };
+  });
+  renderSerotoninScore();
+}
+
+function saveSerotoninFoods() {
+  const active = Array.from(document.querySelectorAll('#serotonin-foods .chip.on')).map(c => c.textContent.trim());
+  const log = getNutritionLog();
+  const today = log[todayKey()] || { meals: [], water: 0, serotoninFoods: [] };
+  today.serotoninFoods = active;
+  log[todayKey()] = today;
+  saveNutritionLog(log);
+  renderSerotoninScore();
+}
+
+function renderSerotoninScore() {
+  const count = document.querySelectorAll('#serotonin-foods .chip.on').length;
+  const el = document.getElementById('serotonin-score');
+  if (!count) { el.textContent = 'Tap what you ate today'; el.style.color = 'var(--dim)'; return; }
+  const msgs = ['Good start — keep adding', 'Building solid serotonin support', 'Strong day for mood nutrition 💪', 'Excellent — your brain is being well fed 🌿'];
+  const idx = Math.min(Math.floor((count / 9) * msgs.length), msgs.length - 1);
+  el.textContent = `${count}/9 serotonin foods today — ${msgs[idx]}`;
+  el.style.color = 'var(--accent)';
+}
+
+// Hook into goScreen
+const _baseGoScreen = goScreen;
+// already defined — just add nutrition to the existing goScreen
+</script>
+
+</body></html>
