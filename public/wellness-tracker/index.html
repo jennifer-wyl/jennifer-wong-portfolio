@@ -679,7 +679,7 @@ textarea::placeholder { color: var(--dim); }
     <div class="topbar-left">
       <div class="topbar-title" id="greeting">Good morning, Jen 🌿</div>
       <div class="topbar-sub" id="today-date">Loading...</div>
-      <div class="topbar-sub" id="sync-status" style="opacity:0.75;margin-top:2px;">Connecting…</div>
+      <div class="topbar-sub" id="sync-status" style="opacity:0.75;margin-top:2px;cursor:pointer;text-decoration:underline dotted;" onclick="setupSyncCode()">Connecting…</div>
     </div>
     <div class="streak-badge" id="streak-badge">Day 1 🌱</div>
   </div>
@@ -1183,15 +1183,17 @@ textarea::placeholder { color: var(--dim); }
 <script>
 // ══════════════════════════════════
 // CROSS-DEVICE SYNC
-// Source of truth is a small JSON data file published alongside this
-// page (data/state.json). Saving on one device publishes a new version
-// of that file; opening the tracker on another device fetches it fresh.
-// If the sync capability isn't available in a given view, everything
-// falls back to that device's own local storage so the app still works.
+// Source of truth is a JSON blob stored in Vercel KV, addressed by a
+// sync code you set once and re-enter on every device you want linked
+// (tap the sync status line under the greeting). Until a code is set,
+// or if the network/API is unavailable, everything falls back to this
+// device's own local storage so the app still works standalone.
 // ══════════════════════════════════
-const LOCAL_FALLBACK_KEY = 'sanctury_state_fallback_v1';
+const LOCAL_FALLBACK_KEY = 'sanctuary_state_v2';
+const SYNC_CODE_KEY = 'sanctuary_sync_code';
 let STATE = { logs: [], resets: [], nutrition: {} };
-let artifactCap = null;
+let syncCode = null;
+let syncAvailable = false;
 let persistTimer = null;
 
 function loadLocalFallback() {
@@ -1204,28 +1206,56 @@ function loadLocalFallback() {
 function updateSyncStatusUI() {
   const el = document.getElementById('sync-status');
   if (!el) return;
-  el.textContent = artifactCap ? '☁ Synced across your devices' : '📱 Saved on this device only';
+  if (!syncCode) { el.textContent = '📱 Saved on this device only · tap to set up sync'; return; }
+  el.textContent = syncAvailable ? '☁ Synced across your devices' : '📱 Saved on this device only (sync offline)';
 }
 
 async function initSync() {
-  try {
-    artifactCap = (window.claude && typeof window.claude.use === 'function')
-      ? await window.claude.use('artifact')
-      : null;
-  } catch (e) { artifactCap = null; }
+  try { syncCode = localStorage.getItem(SYNC_CODE_KEY); } catch (e) { syncCode = null; }
 
-  if (artifactCap) {
+  if (syncCode) {
     try {
-      const res = await fetch('data/state.json', { cache: 'no-store' });
+      const res = await fetch('/api/sync?code=' + encodeURIComponent(syncCode), { cache: 'no-store' });
       if (res.ok) {
-        const remote = await res.json();
-        STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, remote);
+        const j = await res.json();
+        if (j.data) STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, j.data);
+        syncAvailable = true;
       }
-    } catch (e) { /* keep local fallback data */ }
+    } catch (e) { syncAvailable = false; }
   }
 
   updateSyncStatusUI();
   refreshAllViews();
+}
+
+async function setupSyncCode() {
+  const input = prompt('Set a sync code (6+ characters). Enter the SAME code on every device you want linked together:', syncCode || '');
+  if (input === null) return;
+  const trimmed = input.trim();
+  if (trimmed.length < 6) { showToast('Use at least 6 characters'); return; }
+
+  syncCode = trimmed;
+  try { localStorage.setItem(SYNC_CODE_KEY, syncCode); } catch (e) {}
+  showToast('Linking this device…');
+
+  try {
+    const res = await fetch('/api/sync?code=' + encodeURIComponent(syncCode), { cache: 'no-store' });
+    if (res.ok) {
+      const j = await res.json();
+      const hasRemoteData = j.data && ((j.data.logs || []).length || (j.data.resets || []).length || Object.keys(j.data.nutrition || {}).length);
+      if (hasRemoteData && confirm("Found existing data saved under this sync code. Load it and replace what's on this device?")) {
+        STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, j.data);
+      }
+      syncAvailable = true;
+    } else {
+      syncAvailable = false;
+    }
+  } catch (e) { syncAvailable = false; }
+
+  persist();
+  updateSyncStatusUI();
+  refreshAllViews();
+  showToast(syncAvailable ? 'Synced ✓' : 'Saved locally — will sync once online');
 }
 
 function refreshAllViews() {
@@ -1242,22 +1272,23 @@ function refreshAllViews() {
 
 function persist() {
   try { localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(STATE)); } catch (e) {}
-  if (!artifactCap) return;
+  if (!syncCode) return;
 
   clearTimeout(persistTimer);
   persistTimer = setTimeout(async () => {
     try {
-      await artifactCap.publish({ 'data/state.json': JSON.stringify(STATE) });
+      const res = await fetch('/api/sync?code=' + encodeURIComponent(syncCode), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: STATE }),
+      });
+      syncAvailable = res.ok;
+      if (!res.ok) showToast('Sync failed — saved on this device only');
     } catch (err) {
-      const code = err && err.code;
-      if (code === 'conflict') return; // another device saved first — its data wins
-      if (code === 'not_writer' || code === 'not_granted' || code === 'not_declared') {
-        artifactCap = null;
-        updateSyncStatusUI();
-        return;
-      }
+      syncAvailable = false;
       showToast('Sync failed — saved on this device only');
     }
+    updateSyncStatusUI();
   }, 400);
 }
 
