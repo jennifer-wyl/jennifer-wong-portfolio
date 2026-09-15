@@ -669,6 +669,21 @@ textarea {
 }
 textarea:focus { border-color: var(--accent); }
 textarea::placeholder { color: var(--dim); }
+
+.num-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.num-input:focus { border-color: var(--accent); }
+.num-input::placeholder { color: var(--dim); }
 </style>
 </head>
 <body>
@@ -1058,6 +1073,11 @@ textarea::placeholder { color: var(--dim); }
         </div>
 
         <div class="slider-wrap" style="margin-top:12px">
+          <div class="slider-row-label"><span class="slider-name">Estimated calories</span></div>
+          <input type="number" id="meal-calories" inputmode="numeric" min="0" step="10" placeholder="e.g. 450" class="num-input">
+        </div>
+
+        <div class="slider-wrap" style="margin-top:12px">
           <div class="slider-row-label">
             <span class="slider-name">Protein included?</span>
           </div>
@@ -1238,13 +1258,24 @@ async function setupSyncCode() {
   try { localStorage.setItem(SYNC_CODE_KEY, syncCode); } catch (e) {}
   showToast('Linking this device…');
 
+  // Only push this device's state to the server when it's safe to do so —
+  // either nothing exists remotely yet, or the user explicitly chose to
+  // load the remote copy (in which case the push is just a harmless
+  // no-op echo). If remote data exists and the user keeps their local
+  // copy instead, we must NOT push, or we'd silently overwrite the data
+  // already saved under this code.
+  let shouldPush = true;
   try {
     const res = await fetch('/api/sync?code=' + encodeURIComponent(syncCode), { cache: 'no-store' });
     if (res.ok) {
       const j = await res.json();
       const hasRemoteData = j.data && ((j.data.logs || []).length || (j.data.resets || []).length || Object.keys(j.data.nutrition || {}).length);
-      if (hasRemoteData && confirm("Found existing data saved under this sync code. Load it and replace what's on this device?")) {
-        STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, j.data);
+      if (hasRemoteData) {
+        if (confirm("Found existing data saved under this sync code. Load it onto this device?\n\nCancel keeps ONLY this device's current data and leaves the saved data untouched.")) {
+          STATE = Object.assign({ logs: [], resets: [], nutrition: {} }, j.data);
+        } else {
+          shouldPush = false;
+        }
       }
       syncAvailable = true;
     } else {
@@ -1252,10 +1283,11 @@ async function setupSyncCode() {
     }
   } catch (e) { syncAvailable = false; }
 
-  persist();
+  try { localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(STATE)); } catch (e) {}
+  if (shouldPush) persist();
   updateSyncStatusUI();
   refreshAllViews();
-  showToast(syncAvailable ? 'Synced ✓' : 'Saved locally — will sync once online');
+  showToast(shouldPush ? (syncAvailable ? 'Synced ✓' : 'Saved locally — will sync once online') : 'Kept this device\'s data — not synced yet');
 }
 
 function refreshAllViews() {
@@ -1270,18 +1302,24 @@ function refreshAllViews() {
   if (id === 'nutrition') initNutritionScreen();
 }
 
+function pushToServer(useKeepalive) {
+  return fetch('/api/sync?code=' + encodeURIComponent(syncCode), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: STATE }),
+    keepalive: !!useKeepalive,
+  });
+}
+
 function persist() {
   try { localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(STATE)); } catch (e) {}
   if (!syncCode) return;
 
   clearTimeout(persistTimer);
   persistTimer = setTimeout(async () => {
+    persistTimer = null;
     try {
-      const res = await fetch('/api/sync?code=' + encodeURIComponent(syncCode), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: STATE }),
-      });
+      const res = await pushToServer(false);
       syncAvailable = res.ok;
       if (!res.ok) showToast('Sync failed — saved on this device only');
     } catch (err) {
@@ -1291,6 +1329,20 @@ function persist() {
     updateSyncStatusUI();
   }, 400);
 }
+
+// If the tab is closed/backgrounded while a debounced save is still
+// pending, fire it immediately with keepalive so the save survives the
+// page going away instead of being silently dropped.
+function flushPendingPersist() {
+  if (!persistTimer || !syncCode) return;
+  clearTimeout(persistTimer);
+  persistTimer = null;
+  try { pushToServer(true); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushPendingPersist();
+});
+window.addEventListener('pagehide', flushPendingPersist);
 
 function getLogs() { return STATE.logs || []; }
 function saveLogs(logs) { STATE.logs = logs; persist(); }
@@ -2045,6 +2097,12 @@ function initNutritionScreen() {
   updateSerotoninScore(today.serotoninFoods || []);
 }
 
+function updateCalorieBadge(meals) {
+  const total = (meals || []).reduce((sum, m) => sum + (m.calories || 0), 0);
+  const el = document.getElementById('nutrition-calories');
+  if (el) el.textContent = `${total} kcal`;
+}
+
 // ── MEAL LOGGING ──
 function showAddMeal() {
   document.getElementById('add-meal-form').style.display = 'block';
@@ -2052,6 +2110,7 @@ function showAddMeal() {
   selectedProtein = null;
   selectedAfterFeel = null;
   document.getElementById('meal-desc').value = '';
+  document.getElementById('meal-calories').value = '';
   document.querySelectorAll('#meal-type-chips .chip').forEach(c => c.classList.remove('on'));
   document.querySelectorAll('#after-feel-chips .chip').forEach(c => c.classList.remove('on'));
 }
@@ -2082,10 +2141,12 @@ function saveMeal() {
   const desc = document.getElementById('meal-desc').value.trim();
   if (!selectedMealType) { showToast('Select a meal type'); return; }
   if (!desc) { showToast('Describe what you ate'); return; }
+  const calories = Math.max(0, parseInt(document.getElementById('meal-calories').value, 10) || 0);
 
   const meal = {
     type: selectedMealType,
     desc,
+    calories,
     protein: selectedProtein || 'Not noted',
     feel: selectedAfterFeel || 'Not noted',
     time: new Date().toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })
@@ -2104,6 +2165,7 @@ function saveMeal() {
 
 function renderMealList(meals) {
   const el = document.getElementById('meal-list');
+  updateCalorieBadge(meals);
   if (!meals.length) {
     el.innerHTML = `<div class="empty" style="padding:20px 0"><div class="empty-icon" style="font-size:28px">🍽️</div><div class="empty-sub">No meals logged yet today</div></div>`;
     return;
@@ -2113,6 +2175,7 @@ function renderMealList(meals) {
       <div class="log-date">${m.type} · ${m.time}</div>
       <div style="font-size:14px;color:var(--text);margin-bottom:6px">${m.desc}</div>
       <div class="log-meta">
+        ${m.calories ? `<span class="log-pill accent">${m.calories} kcal</span>` : ''}
         <span class="log-pill ${m.protein==='Yes ✓'?'accent':''}">Protein: ${m.protein}</span>
         <span class="log-pill">After: ${m.feel}</span>
       </div>
